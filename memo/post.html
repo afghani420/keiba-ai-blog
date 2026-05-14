@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>メモ投稿 | 物置ブログ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: #F5F5F5; color: #222;
+    min-height: 100vh; padding: 16px;
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .container { background: #fff; padding: 22px 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); width: 100%; max-width: 560px; }
+  h1 { font-size: 18px; color: #1976D2; margin-bottom: 4px; }
+  .desc { font-size: 12px; color: #666; margin-bottom: 16px; line-height: 1.5; }
+  .field { margin-bottom: 14px; }
+  label { display: block; font-size: 13px; font-weight: bold; color: #444; margin-bottom: 6px; }
+  input[type="text"], textarea {
+    width: 100%; padding: 9px 11px; border: 1px solid #BDBDBD; border-radius: 4px;
+    font-size: 14px; font-family: inherit;
+  }
+  textarea { min-height: 200px; resize: vertical; line-height: 1.5; }
+  .hint { font-size: 11px; color: #888; margin-top: 4px; }
+  button {
+    width: 100%; padding: 12px;
+    background: #1976D2; color: #fff; border: none; border-radius: 5px;
+    font-size: 15px; font-weight: bold; cursor: pointer;
+    transition: background 0.15s;
+  }
+  button:hover { background: #1565C0; }
+  button:disabled { background: #BDBDBD; cursor: not-allowed; }
+  #success-box {
+    display: none;
+    padding: 30px 20px; background: #E8F5E9; border-radius: 6px;
+    text-align: center; color: #2E7D32;
+  }
+  #success-box.show { display: block; }
+  #success-box .icon { font-size: 48px; margin-bottom: 10px; }
+  #success-box .msg { font-size: 16px; font-weight: bold; margin-bottom: 6px; }
+  #success-box .hint { font-size: 12px; color: #555; }
+  .nav { margin-top: 16px; text-align: center; }
+  .nav a { color: #1976D2; font-size: 12px; text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📝 メモ投稿</h1>
+  <p class="desc">ブログのメモ欄に新しい記事を投稿します。送信ボタンを押すと別タブで GitHub Issue 作成画面が開きます。そこで「Submit new issue」を押すと自動的にブログに反映されます（数分後）。</p>
+
+  <form id="memo-form">
+    <div class="field">
+      <label for="title">タイトル <span style="color:#C62828;">*</span></label>
+      <input type="text" id="title" required maxlength="80" placeholder="例: 今週の感想">
+    </div>
+    <div class="field">
+      <label for="body">本文 <span style="color:#C62828;">*</span></label>
+      <textarea id="body" required placeholder="マークダウン記法が使えます。&#10;&#10;## 見出し&#10;- リスト&#10;- リスト&#10;&#10;**太字** など"></textarea>
+      <p class="hint">マークダウン記法可（見出し ##・リスト -・太字 **）</p>
+    </div>
+    <button type="submit" id="submit-btn">📤 投稿する</button>
+  </form>
+
+  <div id="success-box">
+    <div class="icon">✓</div>
+    <div class="msg">投稿リクエストを送信しました</div>
+    <div class="hint">別タブの GitHub で「Submit new issue」を押すと完了します。<br>3秒後にブログトップへ移動します...</div>
+  </div>
+
+  <div class="nav">
+    <a href="/keiba-ai-blog/blog/">← ブログトップへ戻る</a>
+  </div>
+</div>
+
+<script>
+  const REPO = 'afghani420/keiba-ai-blog-source';
+  const LABEL = 'blog-memo';
+  const BLOG_URL = '/keiba-ai-blog/blog/';
+
+  document.getElementById('memo-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = document.getElementById('title').value.trim();
+    const body = document.getElementById('body').value.trim();
+    if (!title || !body) {
+      alert('タイトルと本文を入力してください');
+      return;
+    }
+    // GitHub Issue 作成URLにパラメータ付きで遷移（別タブ）
+    // タイトルに [blog-memo] プレフィックスを付ける（Actions 側で除去）
+    const issueUrl = `https://github.com/${REPO}/issues/new?` + new URLSearchParams({
+      title: `[blog-memo] ${title}`,
+      body: body,
+      labels: LABEL,
+    }).toString();
+    window.open(issueUrl, '_blank');
+
+    // 元タブのフォーム画面に投稿完了メッセージ表示
+    document.getElementById('memo-form').style.display = 'none';
+    document.getElementById('success-box').classList.add('show');
+    // 3秒後にブログトップへリダイレクト
+    setTimeout(() => {
+      window.location.href = BLOG_URL;
+    }, 3000);
+  });
+</script>
+</body>
+</html>
